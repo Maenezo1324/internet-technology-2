@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pyshop_db
+    ports:
+      - "5434:5432"
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6381:6379"
+
+  wkhtmltopdf:
+    image: python:3.10-slim
+    ports:
+      - "8005:80"
+    command: 
+      - bash
+      - -c
+      - |
+        pip install fastapi uvicorn
+        cat << 'EOF' > app.py
+        from fastapi import FastAPI, Request, Response
+        app = FastAPI()
+        @app.post("/")
+        async def generate(request: Request):
+            return Response(content=b"%PDF-1.4\nMock PDF file for PyShop task.", media_type="application/pdf")
+        EOF
+        uvicorn app:app --host 0.0.0.0 --port 80
